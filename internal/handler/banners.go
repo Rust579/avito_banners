@@ -10,7 +10,7 @@ import (
 	"log"
 )
 
-func AddBanner(resp *response.Response, ctx *fasthttp.RequestCtx) {
+func CreateBanner(resp *response.Response, ctx *fasthttp.RequestCtx) {
 	var input model.Banner
 
 	if err := json.Unmarshal(ctx.PostBody(), &input); err != nil {
@@ -19,17 +19,30 @@ func AddBanner(resp *response.Response, ctx *fasthttp.RequestCtx) {
 		return
 	}
 
-	if ers := input.Validate(); ers != nil {
-		log.Println("failed to validate add banner request", ers)
-		resp.SetErrors(ers)
+	if !input.Validate() {
+		log.Println("failed to validate create banner request")
+		resp.SetError(errs.GetErr(400))
 		return
 	}
 
-	if err := service.AddBanner(input); err != nil {
+	id, err := service.AddBanner(input)
+	if err != nil {
 		log.Println("add banner error: " + err.Error())
 		resp.SetError(errs.GetErr(99, err.Error()))
 		return
 	}
 
-	resp.SetValue("all right")
+	var res = struct {
+		Description string `json:"description"`
+		BannerId    int    `json:"banner_id"`
+	}{
+		Description: "created",
+		BannerId:    id,
+	}
+
+	resp.SetValue(res)
+}
+
+func GetBanner(resp *response.Response, ctx *fasthttp.RequestCtx) {
+
 }

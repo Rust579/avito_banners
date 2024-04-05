@@ -9,6 +9,7 @@ import (
 type Configs struct {
 	Service  Service  `json:"service"`
 	Postgres Postgres `json:"postgres"`
+	Tokens   Tokens   `json:"tokens"`
 }
 
 type Service struct {
@@ -22,6 +23,11 @@ type Postgres struct {
 	User     string `json:"user"`
 	Password string `json:"password"`
 	Dbname   string `json:"dbname"`
+}
+
+type Tokens struct {
+	Admin string `json:"admin"`
+	User  string `json:"user"`
 }
 
 var Cfg Configs

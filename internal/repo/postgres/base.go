@@ -4,6 +4,7 @@ import (
 	"avito_banners/internal/config"
 	"avito_banners/internal/model"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	_ "github.com/lib/pq"
 	"strconv"
@@ -45,10 +46,8 @@ func createBannersTable() error {
 	var query = []string{
 		`
 		CREATE TABLE IF NOT EXISTS banners (
-			id SERIAL PRIMARY KEY,
-			title VARCHAR(100),
-		    text VARCHAR(100),
-			url VARCHAR(200)
+			banner_id SERIAL PRIMARY KEY,
+			data JSONB
 		)
 		`,
 	}
@@ -63,16 +62,18 @@ func createBannersTable() error {
 	return nil
 }
 
-func InsertBanner(banner model.Banner) error {
+func InsertBanner(banner model.Banner) (int, error) {
 
-	query := `
-		INSERT INTO banners (text, title, url)
-		VALUES ($1, $2, $3)
-	`
-	_, err := psgDb.Exec(query, banner.Text, banner.Title, banner.Url)
+	data, err := json.Marshal(banner)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
-	return nil
+	var bannerID int
+	err = psgDb.QueryRow("INSERT INTO banners (data) VALUES ($1) RETURNING banner_id", data).Scan(&bannerID)
+	if err != nil {
+		return 0, err
+	}
+
+	return bannerID, nil
 }

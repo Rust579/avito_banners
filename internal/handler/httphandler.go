@@ -2,6 +2,7 @@ package handler
 
 import (
 	"avito_banners/internal/errs"
+	"avito_banners/internal/pkg/checktoken"
 	"avito_banners/internal/response"
 	"github.com/valyala/fasthttp"
 	"log"
@@ -23,9 +24,25 @@ func ServerHandler(ctx *fasthttp.RequestCtx) {
 
 	resp := response.InitResponse()
 
+	if err := checktoken.CheckToken(ctx); err != nil {
+		resp.SetError(errs.GetErr(401))
+		ctx.Write(resp.FormResponse().Json())
+		return
+	}
+
+	if string(ctx.Path()) == "/get-banner" {
+		GetBanner(resp, ctx)
+	}
+
+	if err := checktoken.CheckAdminToken(ctx); err != nil {
+		resp.SetError(errs.GetErr(403))
+		ctx.Write(resp.FormResponse().Json())
+		return
+	}
+
 	switch string(ctx.Path()) {
-	case "/xxx":
-		AddBanner(resp, ctx)
+	case "/create-banner":
+		CreateBanner(resp, ctx)
 
 	default:
 		log.Println("unknown request")

@@ -5,10 +5,12 @@ import (
 	"avito_banners/internal/repo/postgres"
 )
 
-func AddBanner(banner model.Banner) error {
+func AddBanner(banner model.Banner) (int, error) {
 
-	if err := postgres.InsertBanner(banner); err != nil {
-		return err
+	id, err := postgres.InsertBanner(banner)
+	if err != nil {
+		return 0, err
 	}
-	return nil
+
+	return id, nil
 }
