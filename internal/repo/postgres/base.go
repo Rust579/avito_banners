@@ -2,11 +2,14 @@ package postgres
 
 import (
 	"avito_banners/internal/config"
+	"avito_banners/internal/model"
 	"database/sql"
 	"fmt"
 	_ "github.com/lib/pq"
 	"strconv"
 )
+
+var psgDb *sql.DB
 
 func Init() error {
 
@@ -22,7 +25,7 @@ func Init() error {
 	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s "+"password=%s dbname=%s sslmode=disable",
 		host, port, user, password, dbname)
 
-	psgDb, err := sql.Open("postgres", psqlInfo)
+	psgDb, err = sql.Open("postgres", psqlInfo)
 	if err != nil {
 		return err
 	}
@@ -31,18 +34,18 @@ func Init() error {
 		return err
 	}
 
-	if err = createBannersTable(psgDb); err != nil {
+	if err = createBannersTable(); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func createBannersTable(db *sql.DB) error {
+func createBannersTable() error {
 	var query = []string{
 		`
 		CREATE TABLE IF NOT EXISTS banners (
-			id INT PRIMARY KEY,
+			id SERIAL PRIMARY KEY,
 			title VARCHAR(100),
 		    text VARCHAR(100),
 			url VARCHAR(200)
@@ -51,10 +54,24 @@ func createBannersTable(db *sql.DB) error {
 	}
 
 	for _, q := range query {
-		_, err := db.Exec(q)
+		_, err := psgDb.Exec(q)
 		if err != nil {
 			return err
 		}
+	}
+
+	return nil
+}
+
+func InsertBanner(banner model.Banner) error {
+
+	query := `
+		INSERT INTO banners (text, title, url)
+		VALUES ($1, $2, $3)
+	`
+	_, err := psgDb.Exec(query, banner.Text, banner.Title, banner.Url)
+	if err != nil {
+		return err
 	}
 
 	return nil
