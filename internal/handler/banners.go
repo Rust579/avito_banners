@@ -16,12 +16,16 @@ func CreateBanner(resp *response.Response, ctx *fasthttp.RequestCtx) {
 	if err := json.Unmarshal(ctx.PostBody(), &input); err != nil {
 		log.Println("add banner error: " + err.Error())
 		resp.SetError(errs.GetErr(100))
+		ctx.SetStatusCode(fasthttp.StatusBadRequest)
+		ctx.SetBodyString(service.Desc400)
 		return
 	}
 
-	if !input.Validate() {
+	if ers := input.Validate(); ers != nil {
 		log.Println("failed to validate create banner request")
-		resp.SetError(errs.GetErr(400))
+		resp.SetErrors(ers)
+		ctx.SetStatusCode(fasthttp.StatusBadRequest)
+		ctx.SetBodyString(service.Desc400)
 		return
 	}
 
@@ -29,16 +33,19 @@ func CreateBanner(resp *response.Response, ctx *fasthttp.RequestCtx) {
 	if err != nil {
 		log.Println("add banner error: " + err.Error())
 		resp.SetError(errs.GetErr(99, err.Error()))
+		ctx.SetStatusCode(fasthttp.StatusInternalServerError)
+		ctx.SetBodyString(service.Desc500)
 		return
 	}
 
 	var res = struct {
-		Description string `json:"description"`
-		BannerId    int    `json:"banner_id"`
+		BannerId int `json:"banner_id"`
 	}{
-		Description: "created",
-		BannerId:    id,
+		BannerId: id,
 	}
+
+	ctx.SetStatusCode(fasthttp.StatusCreated)
+	ctx.SetBodyString(service.Desc201)
 
 	resp.SetValue(res)
 }

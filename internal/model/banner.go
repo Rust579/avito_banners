@@ -1,5 +1,7 @@
 package model
 
+import "avito_banners/internal/errs"
+
 type Banner struct {
 	TagIds     []int      `json:"tag_ids"`
 	FeatureId  int        `json:"feature_id"`
@@ -12,18 +14,38 @@ type BannerItem struct {
 	Url   string `json:"url"`
 }
 
-func (b *Banner) Validate() bool {
-	if !b.BannerItem.Validate() || b.TagIds == nil || b.FeatureId <= 0 {
-		return false
+func (b *Banner) Validate() (ers []errs.Error) {
+	ers = b.BannerItem.Validate()
+
+	if len(b.TagIds) == 0 {
+		ers = append(ers, errs.GetErr(105))
 	}
 
-	return true
+	if b.FeatureId <= 0 {
+		ers = append(ers, errs.GetErr(106))
+	}
+
+	for _, t := range b.TagIds {
+		if t <= 0 {
+			ers = append(ers, errs.GetErr(107))
+		}
+	}
+
+	return
 }
 
-func (b *BannerItem) Validate() bool {
-	if b.Text == "" || b.Title == "" || b.Url == "" {
-		return false
+func (b *BannerItem) Validate() (ers []errs.Error) {
+	if b.Text == "" {
+		ers = append(ers, errs.GetErr(101))
 	}
 
-	return true
+	if b.Title == "" {
+		ers = append(ers, errs.GetErr(102))
+	}
+
+	if b.Url == "" {
+		ers = append(ers, errs.GetErr(103))
+	}
+
+	return
 }
