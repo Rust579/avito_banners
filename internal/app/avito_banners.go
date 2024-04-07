@@ -5,6 +5,7 @@ import (
 	"avito_banners/internal/handler"
 	"avito_banners/internal/repo/postgres"
 	"avito_banners/internal/server"
+	"avito_banners/internal/service/pulls"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -27,6 +28,15 @@ func Run() {
 		log.Println("postgres init error", err.Error())
 		return
 	}
+
+	//TODO почистить память
+	banners, err := postgres.GetAllBanners()
+	if err != nil {
+		log.Println("error get all banners from postgres", err.Error())
+		return
+	}
+
+	pulls.InitBannersPulls(banners)
 
 	srv := server.NewServer(config.Cfg.Service.Address)
 	go func() {

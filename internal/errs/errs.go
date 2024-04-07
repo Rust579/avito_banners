@@ -20,6 +20,7 @@ var listErrors = map[int]string{
 	108: "incorrect admin or user token",
 	109: "token not found",
 	110: "incorrect admin token",
+	111: "banner already exists",
 }
 
 func GetErr(num int, str ...string) Error {

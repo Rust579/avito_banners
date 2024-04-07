@@ -11,7 +11,7 @@ import (
 )
 
 func CreateBanner(resp *response.Response, ctx *fasthttp.RequestCtx) {
-	var input model.Banner
+	var input model.BannerAddRequest
 
 	if err := json.Unmarshal(ctx.PostBody(), &input); err != nil {
 		log.Println("add banner error: " + err.Error())
@@ -29,10 +29,8 @@ func CreateBanner(resp *response.Response, ctx *fasthttp.RequestCtx) {
 		return
 	}
 
-	id, err := service.AddBanner(input)
-	if err != nil {
-		log.Println("add banner error: " + err.Error())
-		resp.SetError(errs.GetErr(99, err.Error()))
+	id := service.AddBanner(input, resp)
+	if id == 0 {
 		ctx.SetStatusCode(fasthttp.StatusInternalServerError)
 		ctx.SetBodyString(service.Desc500)
 		return

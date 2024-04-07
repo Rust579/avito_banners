@@ -2,9 +2,7 @@ package postgres
 
 import (
 	"avito_banners/internal/config"
-	"avito_banners/internal/model"
 	"database/sql"
-	"encoding/json"
 	"fmt"
 	_ "github.com/lib/pq"
 	"strconv"
@@ -47,7 +45,11 @@ func createBannersTable() error {
 		`
 		CREATE TABLE IF NOT EXISTS banners (
 			banner_id SERIAL PRIMARY KEY,
-			data JSONB
+			feature_id INT,
+			tag_ids JSONB,
+			banner_data JSONB,
+			created_at TIMESTAMP,
+		    updated_at TIMESTAMP                               
 		)
 		`,
 	}
@@ -60,20 +62,4 @@ func createBannersTable() error {
 	}
 
 	return nil
-}
-
-func InsertBanner(banner model.Banner) (int, error) {
-
-	data, err := json.Marshal(banner)
-	if err != nil {
-		return 0, err
-	}
-
-	var bannerID int
-	err = psgDb.QueryRow("INSERT INTO banners (data) VALUES ($1) RETURNING banner_id", data).Scan(&bannerID)
-	if err != nil {
-		return 0, err
-	}
-
-	return bannerID, nil
 }

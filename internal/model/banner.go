@@ -1,21 +1,26 @@
 package model
 
-import "avito_banners/internal/errs"
+import (
+	"avito_banners/internal/errs"
+	"time"
+)
 
 type Banner struct {
-	TagIds     []int      `json:"tag_ids"`
-	FeatureId  int        `json:"feature_id"`
-	BannerItem BannerItem `json:"banner_item"`
+	BannerId   int                    `json:"banner_id"`
+	TagIds     []int                  `json:"tag_ids"`
+	FeatureId  int                    `json:"feature_id"`
+	BannerItem map[string]interface{} `json:"banner_item"`
+	CreatedAt  time.Time              `json:"created_at"`
+	UpdatedAt  time.Time              `json:"updated_at"`
 }
 
-type BannerItem struct {
-	Title string `json:"title"`
-	Text  string `json:"text"`
-	Url   string `json:"url"`
+type BannerAddRequest struct {
+	TagIds     []int                  `json:"tag_ids"`
+	FeatureId  int                    `json:"feature_id"`
+	BannerItem map[string]interface{} `json:"banner_item"`
 }
 
-func (b *Banner) Validate() (ers []errs.Error) {
-	ers = b.BannerItem.Validate()
+func (b *BannerAddRequest) Validate() (ers []errs.Error) {
 
 	if len(b.TagIds) == 0 {
 		ers = append(ers, errs.GetErr(105))
@@ -29,22 +34,6 @@ func (b *Banner) Validate() (ers []errs.Error) {
 		if t <= 0 {
 			ers = append(ers, errs.GetErr(107))
 		}
-	}
-
-	return
-}
-
-func (b *BannerItem) Validate() (ers []errs.Error) {
-	if b.Text == "" {
-		ers = append(ers, errs.GetErr(101))
-	}
-
-	if b.Title == "" {
-		ers = append(ers, errs.GetErr(102))
-	}
-
-	if b.Url == "" {
-		ers = append(ers, errs.GetErr(103))
 	}
 
 	return
