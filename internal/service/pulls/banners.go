@@ -2,6 +2,7 @@ package pulls
 
 import (
 	"avito_banners/internal/model"
+	"reflect"
 	"sync"
 )
 
@@ -78,4 +79,42 @@ func GetBannerById(id int) *model.Banner {
 	}
 
 	return &banner
+}
+
+func DeleteBannerById(bannerData model.Banner) {
+	bannerByIdPull.Lock()
+	_, ok := bannerByIdPull.pull[bannerData.BannerId]
+	if ok {
+		delete(bannerByIdPull.pull, bannerData.BannerId)
+	}
+	bannerByIdPull.Unlock()
+
+	bannerByFeatureIdPull.Lock()
+	banners, okk := bannerByFeatureIdPull.pull[bannerData.FeatureId]
+	if okk {
+
+		var bannersByVer []model.Banner
+		var bannerForDelete model.Banner
+
+		for _, b := range banners {
+			if reflect.DeepEqual(bannerData.TagIds, b.TagIds) {
+				bannersByVer = append(bannersByVer, b)
+			}
+		}
+
+		for _, b := range bannersByVer {
+			if b.UpdatedAt == bannerData.UpdatedAt {
+				bannerForDelete = b
+			}
+		}
+
+		for i, b := range banners {
+			if b.BannerId == bannerForDelete.BannerId {
+				banners = append(banners[:i], banners[i+1:]...)
+			}
+		}
+	}
+
+	bannerByFeatureIdPull.pull[bannerData.FeatureId] = banners
+	bannerByFeatureIdPull.Unlock()
 }

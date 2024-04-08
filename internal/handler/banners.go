@@ -99,13 +99,17 @@ func GetBanner(resp *response.Response, ctx *fasthttp.RequestCtx) {
 func UpdateBanner(resp *response.Response, ctx *fasthttp.RequestCtx) {
 	var input model.BannerUpdateRequest
 
-	if err := json.Unmarshal(ctx.PostBody(), &input); err != nil {
+	bannerId, err := strconv.Atoi(string(ctx.QueryArgs().Peek("id")))
+
+	if err = json.Unmarshal(ctx.PostBody(), &input); err != nil {
 		log.Println("add banner error: " + err.Error())
 		resp.SetError(errs.GetErr(100))
 		ctx.SetStatusCode(fasthttp.StatusBadRequest)
 		ctx.SetBodyString(service.Desc400)
 		return
 	}
+
+	input.BannerId = bannerId
 
 	if ers := input.Validate(); ers != nil {
 		log.Println("failed to validate create banner request")
@@ -115,10 +119,46 @@ func UpdateBanner(resp *response.Response, ctx *fasthttp.RequestCtx) {
 		return
 	}
 
-	id := service.UpdateBanner(input)
-	if id == 0 {
+	ok := service.UpdateBanner(input, resp)
+	if !ok {
 		ctx.SetStatusCode(fasthttp.StatusInternalServerError)
 		ctx.SetBodyString(service.Desc500)
 		return
 	}
+
+	ctx.SetStatusCode(fasthttp.StatusOK)
+	ctx.SetBodyString(service.Desc200)
+}
+
+func GetBannerVersions(resp *response.Response, ctx *fasthttp.RequestCtx) {
+	var input model.BannerVersionsRequest
+
+	if err := json.Unmarshal(ctx.PostBody(), &input); err != nil {
+		log.Println("add banner error: " + err.Error())
+		resp.SetError(errs.GetErr(100))
+		ctx.SetStatusCode(fasthttp.StatusBadRequest)
+		ctx.SetBodyString(service.Desc400)
+		return
+	}
+
+	/*if ers := input.Validate(); ers != nil {
+		log.Println("failed to validate create banner request")
+		resp.SetErrors(ers)
+		ctx.SetStatusCode(fasthttp.StatusBadRequest)
+		ctx.SetBodyString(service.Desc400)
+		return
+	}*/
+
+	banners := service.GetBannerVersions(input)
+	if len(banners) == 0 {
+		resp.SetError(errs.GetErr(112))
+		ctx.SetStatusCode(fasthttp.StatusInternalServerError)
+		ctx.SetBodyString(service.Desc500)
+		return
+	}
+
+	ctx.SetStatusCode(fasthttp.StatusOK)
+	ctx.SetBodyString("Версии баннеров пользователей")
+
+	resp.SetValues(banners)
 }

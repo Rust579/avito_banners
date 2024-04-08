@@ -28,6 +28,9 @@ func GetAllBanners() ([]model.Banner, error) {
 			return nil, err
 		}
 
+		banner.CreatedAt = banner.CreatedAt.UTC()
+		banner.UpdatedAt = banner.UpdatedAt.UTC()
+
 		if err := json.Unmarshal(bannerData, &banner.BannerItem); err != nil {
 			return nil, err
 		}
@@ -89,6 +92,9 @@ func FindBannerByFeatureAndTagId(input model.BannerGetRequest) (*model.Banner, e
 		return nil, err
 	}
 
+	banner.CreatedAt = banner.CreatedAt.UTC()
+	banner.UpdatedAt = banner.UpdatedAt.UTC()
+
 	if err := json.Unmarshal(bannerData, &banner.BannerItem); err != nil {
 		return nil, err
 	}
@@ -102,4 +108,15 @@ func FindBannerByFeatureAndTagId(input model.BannerGetRequest) (*model.Banner, e
 	}
 
 	return &banner, nil
+}
+
+func DeleteBannerByID(bannerID int) error {
+	query := "DELETE FROM banners WHERE banner_id = $1"
+
+	_, err := psgDb.Exec(query, bannerID)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

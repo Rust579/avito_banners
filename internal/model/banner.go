@@ -36,6 +36,11 @@ type BannerUpdateRequest struct {
 	BannerItem map[string]interface{} `json:"banner_item"`
 }
 
+type BannerVersionsRequest struct {
+	TagIds    []int `json:"tag_ids"`
+	FeatureId int   `json:"feature_id"`
+}
+
 func (b *BannerAddRequest) Validate() (ers []errs.Error) {
 
 	if len(b.TagIds) == 0 {

@@ -50,8 +50,10 @@ func ServerHandler(ctx *fasthttp.RequestCtx) {
 	switch string(ctx.Path()) {
 	case "/create-banner":
 		CreateBanner(resp, ctx)
-	case "/update-banner":
+	case "/banner":
 		UpdateBanner(resp, ctx)
+	case "/banner-versions":
+		GetBannerVersions(resp, ctx)
 
 	default:
 		log.Println("unknown request")
