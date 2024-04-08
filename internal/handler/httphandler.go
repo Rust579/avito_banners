@@ -33,8 +33,10 @@ func ServerHandler(ctx *fasthttp.RequestCtx) {
 		return
 	}
 
-	if string(ctx.Path()) == "/get-banner" {
+	if string(ctx.Path()) == "/user_banner" {
 		GetBanner(resp, ctx)
+		ctx.Write(resp.FormResponse().Json())
+		return
 	}
 
 	// Проверяем токен админа для остальных эндпоинтов
@@ -48,6 +50,8 @@ func ServerHandler(ctx *fasthttp.RequestCtx) {
 	switch string(ctx.Path()) {
 	case "/create-banner":
 		CreateBanner(resp, ctx)
+	case "/update-banner":
+		UpdateBanner(resp, ctx)
 
 	default:
 		log.Println("unknown request")

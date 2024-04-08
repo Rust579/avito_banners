@@ -56,7 +56,7 @@ func AddPullBanner(banner model.Banner) {
 	return
 }
 
-func GetBannerBuFeatureId(fId int) []model.Banner {
+func GetBannersByFeatureId(fId int) []model.Banner {
 	bannerByFeatureIdPull.Lock()
 	defer bannerByFeatureIdPull.Unlock()
 
@@ -66,4 +66,16 @@ func GetBannerBuFeatureId(fId int) []model.Banner {
 	}
 
 	return banners
+}
+
+func GetBannerById(id int) *model.Banner {
+	bannerByIdPull.Lock()
+	defer bannerByIdPull.Unlock()
+
+	banner, ok := bannerByIdPull.pull[id]
+	if !ok {
+		return nil
+	}
+
+	return &banner
 }

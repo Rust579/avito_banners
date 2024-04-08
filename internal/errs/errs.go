@@ -21,6 +21,8 @@ var listErrors = map[int]string{
 	109: "token not found",
 	110: "incorrect admin token",
 	111: "banner already exists",
+	112: "banner not found",
+	113: "id can not be zero or negative",
 }
 
 func GetErr(num int, str ...string) Error {

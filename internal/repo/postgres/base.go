@@ -48,6 +48,7 @@ func createBannersTable() error {
 			feature_id INT,
 			tag_ids JSONB,
 			banner_data JSONB,
+			is_active BOOLEAN,
 			created_at TIMESTAMP,
 		    updated_at TIMESTAMP                               
 		)
