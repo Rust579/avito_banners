@@ -41,6 +41,10 @@ type BannerVersionsRequest struct {
 	FeatureId int   `json:"feature_id"`
 }
 
+type BannerIdRequest struct {
+	BannerId int `json:"banner_id"`
+}
+
 func (b *BannerAddRequest) Validate() (ers []errs.Error) {
 
 	if len(b.TagIds) == 0 {
@@ -91,6 +95,34 @@ func (b *BannerUpdateRequest) Validate() (ers []errs.Error) {
 		if t <= 0 {
 			ers = append(ers, errs.GetErr(107))
 		}
+	}
+
+	return
+}
+
+func (b *BannerVersionsRequest) Validate() (ers []errs.Error) {
+
+	if len(b.TagIds) == 0 {
+		ers = append(ers, errs.GetErr(105))
+	}
+
+	if b.FeatureId <= 0 {
+		ers = append(ers, errs.GetErr(106))
+	}
+
+	for _, t := range b.TagIds {
+		if t <= 0 {
+			ers = append(ers, errs.GetErr(107))
+		}
+	}
+
+	return
+}
+
+func (b *BannerIdRequest) Validate() (ers []errs.Error) {
+
+	if b.BannerId <= 0 {
+		ers = append(ers, errs.GetErr(113))
 	}
 
 	return

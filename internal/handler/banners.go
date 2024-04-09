@@ -24,7 +24,6 @@ func CreateBanner(resp *response.Response, ctx *fasthttp.RequestCtx) {
 	}
 
 	if ers := input.Validate(); ers != nil {
-		log.Println("failed to validate create banner request")
 		resp.SetErrors(ers)
 		ctx.SetStatusCode(fasthttp.StatusBadRequest)
 		ctx.SetBodyString(service.Desc400)
@@ -59,14 +58,13 @@ func GetBanner(resp *response.Response, ctx *fasthttp.RequestCtx) {
 	input.UseLastRevision, err = strconv.ParseBool(string(ctx.QueryArgs().Peek("use_last_revision")))
 
 	if err != nil {
-		log.Println("add banner error: " + err.Error())
+		log.Println("get banner error: " + err.Error())
 		resp.SetError(errs.GetErr(100))
 		ctx.SetStatusCode(fasthttp.StatusBadRequest)
 		ctx.SetBodyString(service.Desc400)
 	}
 
 	if ers := input.Validate(); ers != nil {
-		log.Println("failed to validate get banner request")
 		resp.SetErrors(ers)
 		ctx.SetStatusCode(fasthttp.StatusBadRequest)
 		ctx.SetBodyString(service.Desc400)
@@ -102,7 +100,7 @@ func UpdateBanner(resp *response.Response, ctx *fasthttp.RequestCtx) {
 	bannerId, err := strconv.Atoi(string(ctx.QueryArgs().Peek("id")))
 
 	if err = json.Unmarshal(ctx.PostBody(), &input); err != nil {
-		log.Println("add banner error: " + err.Error())
+		log.Println("update banner error: " + err.Error())
 		resp.SetError(errs.GetErr(100))
 		ctx.SetStatusCode(fasthttp.StatusBadRequest)
 		ctx.SetBodyString(service.Desc400)
@@ -112,7 +110,6 @@ func UpdateBanner(resp *response.Response, ctx *fasthttp.RequestCtx) {
 	input.BannerId = bannerId
 
 	if ers := input.Validate(); ers != nil {
-		log.Println("failed to validate create banner request")
 		resp.SetErrors(ers)
 		ctx.SetStatusCode(fasthttp.StatusBadRequest)
 		ctx.SetBodyString(service.Desc400)
@@ -134,20 +131,19 @@ func GetBannerVersions(resp *response.Response, ctx *fasthttp.RequestCtx) {
 	var input model.BannerVersionsRequest
 
 	if err := json.Unmarshal(ctx.PostBody(), &input); err != nil {
-		log.Println("add banner error: " + err.Error())
+		log.Println("get banner versions error: " + err.Error())
 		resp.SetError(errs.GetErr(100))
 		ctx.SetStatusCode(fasthttp.StatusBadRequest)
 		ctx.SetBodyString(service.Desc400)
 		return
 	}
 
-	/*if ers := input.Validate(); ers != nil {
-		log.Println("failed to validate create banner request")
+	if ers := input.Validate(); ers != nil {
 		resp.SetErrors(ers)
 		ctx.SetStatusCode(fasthttp.StatusBadRequest)
 		ctx.SetBodyString(service.Desc400)
 		return
-	}*/
+	}
 
 	banners := service.GetBannerVersions(input)
 	if len(banners) == 0 {
@@ -161,4 +157,33 @@ func GetBannerVersions(resp *response.Response, ctx *fasthttp.RequestCtx) {
 	ctx.SetBodyString("Версии баннеров пользователей")
 
 	resp.SetValues(banners)
+}
+
+func SetBannerVersion(resp *response.Response, ctx *fasthttp.RequestCtx) {
+	var input model.BannerIdRequest
+
+	if err := json.Unmarshal(ctx.PostBody(), &input); err != nil {
+		log.Println("set banner version error: " + err.Error())
+		resp.SetError(errs.GetErr(100))
+		ctx.SetStatusCode(fasthttp.StatusBadRequest)
+		ctx.SetBodyString(service.Desc400)
+		return
+	}
+
+	if ers := input.Validate(); ers != nil {
+		resp.SetErrors(ers)
+		ctx.SetStatusCode(fasthttp.StatusBadRequest)
+		ctx.SetBodyString(service.Desc400)
+		return
+	}
+
+	err := service.SetBannerVersion(input, resp)
+	if err != nil {
+		ctx.SetStatusCode(fasthttp.StatusInternalServerError)
+		ctx.SetBodyString(service.Desc500)
+		return
+	}
+
+	ctx.SetStatusCode(fasthttp.StatusOK)
+	ctx.SetBodyString("Версия баннера установлена")
 }

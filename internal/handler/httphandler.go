@@ -54,6 +54,8 @@ func ServerHandler(ctx *fasthttp.RequestCtx) {
 		UpdateBanner(resp, ctx)
 	case "/banner-versions":
 		GetBannerVersions(resp, ctx)
+	case "/set-banner-version":
+		SetBannerVersion(resp, ctx)
 
 	default:
 		log.Println("unknown request")

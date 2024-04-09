@@ -4,6 +4,7 @@ import (
 	"avito_banners/internal/model"
 	"encoding/json"
 	"strconv"
+	"time"
 )
 
 func GetAllBanners() ([]model.Banner, error) {
@@ -65,7 +66,7 @@ func InsertBanner(banner model.Banner) (int, error) {
 
 	var bannerID int
 
-	err = psgDb.QueryRow(query, banner.FeatureId, tagIdsJson, bannerItemJson, banner.IsActive, banner.CreatedAt, banner.UpdatedAt).Scan(&bannerID)
+	err = psgDb.QueryRow(query, banner.FeatureId, tagIdsJson, bannerItemJson, banner.IsActive, banner.CreatedAt.UTC(), banner.UpdatedAt.UTC()).Scan(&bannerID)
 	if err != nil {
 		return 0, err
 	}
@@ -114,6 +115,18 @@ func DeleteBannerByID(bannerID int) error {
 	query := "DELETE FROM banners WHERE banner_id = $1"
 
 	_, err := psgDb.Exec(query, bannerID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func SetNewBannerVersionByID(bannerID int, updatetAt time.Time) error {
+
+	query := "UPDATE banners SET updated_at = $1 WHERE banner_id = $2"
+
+	_, err := psgDb.Exec(query, updatetAt.UTC(), bannerID)
 	if err != nil {
 		return err
 	}

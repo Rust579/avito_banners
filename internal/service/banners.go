@@ -6,6 +6,7 @@ import (
 	"avito_banners/internal/repo/postgres"
 	"avito_banners/internal/response"
 	"avito_banners/internal/service/pulls"
+	"errors"
 	"reflect"
 	"slices"
 	"time"
@@ -129,21 +130,20 @@ func UpdateBanner(bannerData model.BannerUpdateRequest, resp *response.Response)
 
 	newestBanner.BannerItem = bannerData.BannerItem
 	newestBanner.IsActive = bannerData.IsActive
-	newestBanner.UpdatedAt = time.Now()
+	newestBanner.UpdatedAt = time.Now().UTC()
 
 	id, err := postgres.InsertBanner(newestBanner)
 	if err != nil {
 		resp.SetError(errs.GetErr(99, err.Error()))
 		return false
 	}
-	newestBanner.UpdatedAt = time.Now().UTC().Add(5 * time.Hour)
+
 	newestBanner.BannerId = id
 	pulls.AddPullBanner(newestBanner)
 
 	if len(bannersByVer) >= 3 {
 
-		err = postgres.DeleteBannerByID(oldestBanner.BannerId)
-		if err != nil {
+		if err = postgres.DeleteBannerByID(oldestBanner.BannerId); err != nil {
 			resp.SetError(errs.GetErr(99, err.Error()))
 			return false
 		}
@@ -174,6 +174,25 @@ func GetBannerVersions(bannerData model.BannerVersionsRequest) []model.Banner {
 	}
 
 	return bannersByVer
+}
+
+func SetBannerVersion(input model.BannerIdRequest, resp *response.Response) error {
+
+	banner := pulls.GetBannerById(input.BannerId)
+	if banner == nil {
+		resp.SetError(errs.GetErr(112))
+		return errors.New("banner not found")
+	}
+
+	banner.UpdatedAt = time.Now().UTC()
+
+	if err := postgres.SetNewBannerVersionByID(banner.BannerId, banner.UpdatedAt); err != nil {
+		resp.SetError(errs.GetErr(99, err.Error()))
+		return err
+	}
+	pulls.UpdatePullBanner(*banner)
+
+	return nil
 }
 
 func checkExistsBanner(data model.Banner) (int, bool) {

@@ -57,6 +57,30 @@ func AddPullBanner(banner model.Banner) {
 	return
 }
 
+func UpdatePullBanner(updBanner model.Banner) {
+	bannerByIdPull.Lock()
+	_, ok := bannerByIdPull.pull[updBanner.BannerId]
+	if ok {
+		bannerByIdPull.pull[updBanner.BannerId] = updBanner
+	}
+	bannerByIdPull.Unlock()
+
+	bannerByFeatureIdPull.Lock()
+	banners, okk := bannerByFeatureIdPull.pull[updBanner.FeatureId]
+	if okk {
+		for i, b := range banners {
+			if b.BannerId == updBanner.BannerId {
+				banners[i] = updBanner
+			}
+		}
+		bannerByFeatureIdPull.pull[updBanner.FeatureId] = banners
+	}
+
+	bannerByFeatureIdPull.Unlock()
+
+	return
+}
+
 func GetBannersByFeatureId(fId int) []model.Banner {
 	bannerByFeatureIdPull.Lock()
 	defer bannerByFeatureIdPull.Unlock()
