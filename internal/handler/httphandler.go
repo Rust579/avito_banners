@@ -52,6 +52,11 @@ func ServerHandler(ctx *fasthttp.RequestCtx) {
 		CreateBanner(resp, ctx)
 	case "/banner":
 		UpdateBanner(resp, ctx)
+	case "/banners":
+		GetBanners(resp, ctx)
+	case "/delete":
+		DeleteBanner(resp, ctx)
+
 	case "/banner-versions":
 		GetBannerVersions(resp, ctx)
 	case "/set-banner-version":

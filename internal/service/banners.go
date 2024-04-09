@@ -195,6 +195,31 @@ func SetBannerVersion(input model.BannerIdRequest, resp *response.Response) erro
 	return nil
 }
 
+func GetBanners(input model.BannersGetRequest) ([]*model.Banner, int, error) {
+
+	banners, count, err := postgres.FindBannerByParams(input.TagId, input.FeatureId, input.Offset, input.Limit)
+	if err != nil {
+		return nil, count, err
+	}
+
+	return banners, count, nil
+}
+
+func DeleteBanner(input model.BannerIdRequest) error {
+
+	if err := postgres.DeleteBannerByID(input.BannerId); err != nil {
+		return err
+	}
+
+	banner := pulls.GetBannerById(input.BannerId)
+	if banner == nil {
+		return errors.New("banner not found")
+	}
+	pulls.DeleteBannerById(*banner)
+
+	return nil
+}
+
 func checkExistsBanner(data model.Banner) (int, bool) {
 
 	banners := pulls.GetBannersByFeatureId(data.FeatureId)

@@ -23,6 +23,8 @@ var listErrors = map[int]string{
 	111: "banner already exists",
 	112: "banner not found",
 	113: "id can not be zero or negative",
+	114: "tag_id with feature_id can not be zero",
+	115: "banners not found",
 }
 
 func GetErr(num int, str ...string) Error {

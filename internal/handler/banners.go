@@ -62,6 +62,7 @@ func GetBanner(resp *response.Response, ctx *fasthttp.RequestCtx) {
 		resp.SetError(errs.GetErr(100))
 		ctx.SetStatusCode(fasthttp.StatusBadRequest)
 		ctx.SetBodyString(service.Desc400)
+		return
 	}
 
 	if ers := input.Validate(); ers != nil {
@@ -186,4 +187,78 @@ func SetBannerVersion(resp *response.Response, ctx *fasthttp.RequestCtx) {
 
 	ctx.SetStatusCode(fasthttp.StatusOK)
 	ctx.SetBodyString("Версия баннера установлена")
+}
+
+func GetBanners(resp *response.Response, ctx *fasthttp.RequestCtx) {
+	var input model.BannersGetRequest
+	var err error
+
+	input.TagId, _ = strconv.Atoi(string(ctx.QueryArgs().Peek("tag_id")))
+	input.FeatureId, _ = strconv.Atoi(string(ctx.QueryArgs().Peek("feature_id")))
+	input.Limit, _ = strconv.Atoi(string(ctx.QueryArgs().Peek("limit")))
+	input.Offset, _ = strconv.Atoi(string(ctx.QueryArgs().Peek("offset")))
+
+	if ers := input.Validate(); ers != nil {
+		resp.SetErrors(ers)
+		ctx.SetStatusCode(fasthttp.StatusBadRequest)
+		ctx.SetBodyString(service.Desc400)
+		return
+	}
+
+	banners, count, err := service.GetBanners(input)
+	if err != nil {
+		resp.SetError(errs.GetErr(99, err.Error()))
+		ctx.SetStatusCode(fasthttp.StatusInternalServerError)
+		ctx.SetBodyString(service.Desc500)
+		return
+	}
+
+	if len(banners) == 0 {
+		resp.SetError(errs.GetErr(115))
+		ctx.SetStatusCode(fasthttp.StatusInternalServerError)
+		ctx.SetBodyString(service.Desc500)
+	}
+
+	var res = struct {
+		Banners []*model.Banner `json:"banners"`
+		Count   int             `json:"count"`
+	}{
+		Banners: banners,
+		Count:   count,
+	}
+
+	ctx.SetStatusCode(fasthttp.StatusOK)
+	resp.SetValue(res)
+}
+
+func DeleteBanner(resp *response.Response, ctx *fasthttp.RequestCtx) {
+	var input model.BannerIdRequest
+	var err error
+
+	input.BannerId, err = strconv.Atoi(string(ctx.QueryArgs().Peek("id")))
+	if err != nil {
+		resp.SetError(errs.GetErr(100))
+		ctx.SetStatusCode(fasthttp.StatusBadRequest)
+		ctx.SetBodyString(service.Desc400)
+		return
+	}
+
+	if ers := input.Validate(); ers != nil {
+		resp.SetErrors(ers)
+		ctx.SetStatusCode(fasthttp.StatusBadRequest)
+		ctx.SetBodyString(service.Desc400)
+		return
+	}
+
+	err = service.DeleteBanner(input)
+	if err != nil {
+		resp.SetError(errs.GetErr(99, err.Error()))
+		ctx.SetStatusCode(fasthttp.StatusNotFound)
+		ctx.SetBodyString(service.Desc404)
+		return
+	}
+
+	ctx.SetStatusCode(fasthttp.StatusNoContent)
+	ctx.SetBodyString(service.Desc204)
+	//TODO почему-то не пишется респонс пустой
 }

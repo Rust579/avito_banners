@@ -133,3 +133,81 @@ func SetNewBannerVersionByID(bannerID int, updatetAt time.Time) error {
 
 	return nil
 }
+
+func FindBannerByParams(tagID, featureID, offset, limit int) ([]*model.Banner, int, error) {
+	var banners []*model.Banner
+	var count int
+
+	query := "SELECT b.* FROM (SELECT DISTINCT ON (created_at) * FROM banners WHERE"
+	countQuery := "SELECT COUNT(*) FROM (SELECT DISTINCT ON (created_at) * FROM banners WHERE"
+
+	// Добавляем условие на tag_id, если он передан
+	if tagID != 0 {
+		query += " tag_ids @> '[" + strconv.Itoa(tagID) + "]'::jsonb"
+		countQuery += " tag_ids @> '[" + strconv.Itoa(tagID) + "]'::jsonb"
+	}
+
+	// Добавляем условие на feature_id, если он передан
+	if featureID != 0 {
+		if tagID != 0 {
+			query += " AND"
+			countQuery += " AND"
+		}
+		query += " feature_id = " + strconv.Itoa(featureID)
+		countQuery += " feature_id = " + strconv.Itoa(featureID)
+	}
+
+	// Добавляем сортировку по created_at и updated_at в обратном порядке
+	query += " ORDER BY created_at DESC, updated_at DESC) AS b"
+
+	// Добавляем опциональные параметры offset и limit
+	if limit != 0 {
+		query += " LIMIT " + strconv.Itoa(limit)
+	}
+	if offset != 0 {
+		query += " OFFSET " + strconv.Itoa(offset)
+	}
+
+	rows, err := psgDb.Query(query)
+	if err != nil {
+		return nil, 0, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var banner model.Banner
+		var bannerData []byte
+		var tagIdsData []byte
+
+		if err := rows.Scan(&banner.BannerId, &banner.FeatureId, &tagIdsData, &bannerData, &banner.IsActive, &banner.CreatedAt, &banner.UpdatedAt); err != nil {
+			return nil, 0, err
+		}
+
+		banner.CreatedAt = banner.CreatedAt.UTC()
+		banner.UpdatedAt = banner.UpdatedAt.UTC()
+
+		if err := json.Unmarshal(bannerData, &banner.BannerItem); err != nil {
+			return nil, 0, err
+		}
+
+		if err := json.Unmarshal(tagIdsData, &banner.TagIds); err != nil {
+			return nil, 0, err
+		}
+
+		banners = append(banners, &banner)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, 0, err
+	}
+
+	countQuery += ") AS b"
+
+	// Выполняем запрос для подсчета количества строк
+	err = psgDb.QueryRow(countQuery).Scan(&count)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return banners, count, nil
+}
