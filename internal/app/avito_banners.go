@@ -12,6 +12,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 )
 
 func Run() {
@@ -24,7 +25,19 @@ func Run() {
 	log.Println("________________________________CONFIG PARSING________________________________")
 	log.Println(string(bts))
 
-	if err := postgres.Init(); err != nil {
+	var err error
+
+	for i := 0; i <= 3; i++ {
+		if err = postgres.Init(); err != nil {
+			log.Println("postgres init error", err.Error())
+			log.Println("waiting 5 second...")
+		} else {
+			break
+		}
+		time.Sleep(5 * time.Second)
+	}
+
+	if err != nil {
 		log.Println("postgres init error", err.Error())
 		return
 	}

@@ -58,6 +58,8 @@ func ServerHandler(ctx *fasthttp.RequestCtx) {
 		GetBannerVersions(resp, ctx)
 	case "/set-banner-version":
 		SetBannerVersion(resp, ctx)
+	case "/delete-banners":
+		DeleteBanners(resp, ctx)
 
 	default:
 		log.Println("unknown request")

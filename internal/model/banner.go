@@ -52,6 +52,11 @@ type BannersGetRequest struct {
 	Offset    int `json:"offset"`
 }
 
+type BannersDeleteRequest struct {
+	TagId     int `json:"tag_id"`
+	FeatureId int `json:"feature_id"`
+}
+
 func (b *BannerAddRequest) Validate() (ers []errs.Error) {
 
 	if len(b.TagIds) == 0 {
@@ -136,6 +141,15 @@ func (b *BannerIdRequest) Validate() (ers []errs.Error) {
 }
 
 func (b *BannersGetRequest) Validate() (ers []errs.Error) {
+
+	if b.TagId <= 0 && b.FeatureId <= 0 {
+		ers = append(ers, errs.GetErr(114))
+	}
+
+	return
+}
+
+func (b *BannersDeleteRequest) Validate() (ers []errs.Error) {
 
 	if b.TagId <= 0 && b.FeatureId <= 0 {
 		ers = append(ers, errs.GetErr(114))

@@ -234,3 +234,24 @@ func DeleteBanner(resp *response.Response, ctx *fasthttp.RequestCtx) {
 	ctx.SetStatusCode(fasthttp.StatusNoContent)
 	//TODO почему-то не пишется респонс пустой
 }
+
+func DeleteBanners(resp *response.Response, ctx *fasthttp.RequestCtx) {
+	var input model.BannersDeleteRequest
+	var err error
+
+	input.TagId, err = strconv.Atoi(string(ctx.QueryArgs().Peek("tag_id")))
+	input.FeatureId, err = strconv.Atoi(string(ctx.QueryArgs().Peek("feature_id")))
+
+	if ers := input.Validate(); ers != nil {
+		resp.SetErrors(ers)
+		ctx.SetStatusCode(fasthttp.StatusBadRequest)
+		return
+	}
+
+	err = service.DeleteBanners(input)
+	if err != nil {
+		resp.SetError(errs.GetErr(112))
+		ctx.SetStatusCode(fasthttp.StatusNotFound)
+		return
+	}
+}

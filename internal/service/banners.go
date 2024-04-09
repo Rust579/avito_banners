@@ -220,6 +220,21 @@ func DeleteBanner(input model.BannerIdRequest) error {
 	return nil
 }
 
+func DeleteBanners(input model.BannersDeleteRequest) error {
+
+	/*if err := postgres.DeleteBannerByID(input.BannerId); err != nil {
+		return err
+	}
+
+	banner := pulls.GetBannerById(input.BannerId)
+	if banner == nil {
+		return errors.New("banner not found")
+	}
+	pulls.DeleteBannerById(*banner)*/
+
+	return nil
+}
+
 func checkExistsBanner(data model.Banner) (int, bool) {
 
 	banners := pulls.GetBannersByFeatureId(data.FeatureId)
