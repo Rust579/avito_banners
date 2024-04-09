@@ -19,21 +19,18 @@ func CreateBanner(resp *response.Response, ctx *fasthttp.RequestCtx) {
 		log.Println("add banner error: " + err.Error())
 		resp.SetError(errs.GetErr(100))
 		ctx.SetStatusCode(fasthttp.StatusBadRequest)
-		ctx.SetBodyString(service.Desc400)
 		return
 	}
 
 	if ers := input.Validate(); ers != nil {
 		resp.SetErrors(ers)
 		ctx.SetStatusCode(fasthttp.StatusBadRequest)
-		ctx.SetBodyString(service.Desc400)
 		return
 	}
 
 	id := service.CreateBanner(input, resp)
 	if id == 0 {
 		ctx.SetStatusCode(fasthttp.StatusInternalServerError)
-		ctx.SetBodyString(service.Desc500)
 		return
 	}
 
@@ -44,7 +41,6 @@ func CreateBanner(resp *response.Response, ctx *fasthttp.RequestCtx) {
 	}
 
 	ctx.SetStatusCode(fasthttp.StatusCreated)
-	ctx.SetBodyString(service.Desc201)
 
 	resp.SetValue(res)
 }
@@ -61,14 +57,12 @@ func GetBanner(resp *response.Response, ctx *fasthttp.RequestCtx) {
 		log.Println("get banner error: " + err.Error())
 		resp.SetError(errs.GetErr(100))
 		ctx.SetStatusCode(fasthttp.StatusBadRequest)
-		ctx.SetBodyString(service.Desc400)
 		return
 	}
 
 	if ers := input.Validate(); ers != nil {
 		resp.SetErrors(ers)
 		ctx.SetStatusCode(fasthttp.StatusBadRequest)
-		ctx.SetBodyString(service.Desc400)
 		return
 	}
 
@@ -76,7 +70,6 @@ func GetBanner(resp *response.Response, ctx *fasthttp.RequestCtx) {
 	if err != nil {
 		resp.SetError(errs.GetErr(112))
 		ctx.SetStatusCode(fasthttp.StatusNotFound)
-		ctx.SetBodyString(service.Desc404)
 		return
 	}
 
@@ -85,12 +78,10 @@ func GetBanner(resp *response.Response, ctx *fasthttp.RequestCtx) {
 	if !banner.IsActive && token != config.Cfg.Tokens.Admin {
 		resp.SetError(errs.GetErr(112))
 		ctx.SetStatusCode(fasthttp.StatusNotFound)
-		ctx.SetBodyString(service.Desc404)
 		return
 	}
 
 	ctx.SetStatusCode(fasthttp.StatusOK)
-	ctx.SetBodyString(service.Desc200)
 
 	resp.SetValue(banner.BannerItem)
 }
@@ -104,7 +95,6 @@ func UpdateBanner(resp *response.Response, ctx *fasthttp.RequestCtx) {
 		log.Println("update banner error: " + err.Error())
 		resp.SetError(errs.GetErr(100))
 		ctx.SetStatusCode(fasthttp.StatusBadRequest)
-		ctx.SetBodyString(service.Desc400)
 		return
 	}
 
@@ -113,19 +103,16 @@ func UpdateBanner(resp *response.Response, ctx *fasthttp.RequestCtx) {
 	if ers := input.Validate(); ers != nil {
 		resp.SetErrors(ers)
 		ctx.SetStatusCode(fasthttp.StatusBadRequest)
-		ctx.SetBodyString(service.Desc400)
 		return
 	}
 
 	ok := service.UpdateBanner(input, resp)
 	if !ok {
 		ctx.SetStatusCode(fasthttp.StatusInternalServerError)
-		ctx.SetBodyString(service.Desc500)
 		return
 	}
 
 	ctx.SetStatusCode(fasthttp.StatusOK)
-	ctx.SetBodyString(service.Desc200)
 }
 
 func GetBannerVersions(resp *response.Response, ctx *fasthttp.RequestCtx) {
@@ -135,14 +122,12 @@ func GetBannerVersions(resp *response.Response, ctx *fasthttp.RequestCtx) {
 		log.Println("get banner versions error: " + err.Error())
 		resp.SetError(errs.GetErr(100))
 		ctx.SetStatusCode(fasthttp.StatusBadRequest)
-		ctx.SetBodyString(service.Desc400)
 		return
 	}
 
 	if ers := input.Validate(); ers != nil {
 		resp.SetErrors(ers)
 		ctx.SetStatusCode(fasthttp.StatusBadRequest)
-		ctx.SetBodyString(service.Desc400)
 		return
 	}
 
@@ -150,12 +135,10 @@ func GetBannerVersions(resp *response.Response, ctx *fasthttp.RequestCtx) {
 	if len(banners) == 0 {
 		resp.SetError(errs.GetErr(112))
 		ctx.SetStatusCode(fasthttp.StatusInternalServerError)
-		ctx.SetBodyString(service.Desc500)
 		return
 	}
 
 	ctx.SetStatusCode(fasthttp.StatusOK)
-	ctx.SetBodyString("Версии баннеров пользователей")
 
 	resp.SetValues(banners)
 }
@@ -167,26 +150,22 @@ func SetBannerVersion(resp *response.Response, ctx *fasthttp.RequestCtx) {
 		log.Println("set banner version error: " + err.Error())
 		resp.SetError(errs.GetErr(100))
 		ctx.SetStatusCode(fasthttp.StatusBadRequest)
-		ctx.SetBodyString(service.Desc400)
 		return
 	}
 
 	if ers := input.Validate(); ers != nil {
 		resp.SetErrors(ers)
 		ctx.SetStatusCode(fasthttp.StatusBadRequest)
-		ctx.SetBodyString(service.Desc400)
 		return
 	}
 
 	err := service.SetBannerVersion(input, resp)
 	if err != nil {
 		ctx.SetStatusCode(fasthttp.StatusInternalServerError)
-		ctx.SetBodyString(service.Desc500)
 		return
 	}
 
 	ctx.SetStatusCode(fasthttp.StatusOK)
-	ctx.SetBodyString("Версия баннера установлена")
 }
 
 func GetBanners(resp *response.Response, ctx *fasthttp.RequestCtx) {
@@ -201,7 +180,6 @@ func GetBanners(resp *response.Response, ctx *fasthttp.RequestCtx) {
 	if ers := input.Validate(); ers != nil {
 		resp.SetErrors(ers)
 		ctx.SetStatusCode(fasthttp.StatusBadRequest)
-		ctx.SetBodyString(service.Desc400)
 		return
 	}
 
@@ -209,14 +187,12 @@ func GetBanners(resp *response.Response, ctx *fasthttp.RequestCtx) {
 	if err != nil {
 		resp.SetError(errs.GetErr(99, err.Error()))
 		ctx.SetStatusCode(fasthttp.StatusInternalServerError)
-		ctx.SetBodyString(service.Desc500)
 		return
 	}
 
 	if len(banners) == 0 {
 		resp.SetError(errs.GetErr(115))
 		ctx.SetStatusCode(fasthttp.StatusInternalServerError)
-		ctx.SetBodyString(service.Desc500)
 	}
 
 	var res = struct {
@@ -239,14 +215,12 @@ func DeleteBanner(resp *response.Response, ctx *fasthttp.RequestCtx) {
 	if err != nil {
 		resp.SetError(errs.GetErr(100))
 		ctx.SetStatusCode(fasthttp.StatusBadRequest)
-		ctx.SetBodyString(service.Desc400)
 		return
 	}
 
 	if ers := input.Validate(); ers != nil {
 		resp.SetErrors(ers)
 		ctx.SetStatusCode(fasthttp.StatusBadRequest)
-		ctx.SetBodyString(service.Desc400)
 		return
 	}
 
@@ -254,11 +228,9 @@ func DeleteBanner(resp *response.Response, ctx *fasthttp.RequestCtx) {
 	if err != nil {
 		resp.SetError(errs.GetErr(99, err.Error()))
 		ctx.SetStatusCode(fasthttp.StatusNotFound)
-		ctx.SetBodyString(service.Desc404)
 		return
 	}
 
 	ctx.SetStatusCode(fasthttp.StatusNoContent)
-	ctx.SetBodyString(service.Desc204)
 	//TODO почему-то не пишется респонс пустой
 }

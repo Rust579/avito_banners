@@ -4,7 +4,6 @@ import (
 	"avito_banners/internal/errs"
 	"avito_banners/internal/pkg/checktoken"
 	"avito_banners/internal/response"
-	"avito_banners/internal/service"
 	"github.com/valyala/fasthttp"
 	"log"
 )
@@ -28,7 +27,6 @@ func ServerHandler(ctx *fasthttp.RequestCtx) {
 	// Проверяем токен юзера или админа для эндпоинта /get-banner
 	if !checktoken.CheckToken(ctx, resp) {
 		ctx.SetStatusCode(fasthttp.StatusUnauthorized)
-		ctx.SetBodyString(service.Desc401)
 		ctx.Write(resp.FormResponse().Json())
 		return
 	}
@@ -42,7 +40,6 @@ func ServerHandler(ctx *fasthttp.RequestCtx) {
 	// Проверяем токен админа для остальных эндпоинтов
 	if !checktoken.CheckAdminToken(ctx, resp) {
 		ctx.SetStatusCode(fasthttp.StatusUnauthorized)
-		ctx.SetBodyString(service.Desc403)
 		ctx.Write(resp.FormResponse().Json())
 		return
 	}
