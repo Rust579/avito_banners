@@ -196,8 +196,8 @@ func GetBanners(resp *response.Response, ctx *fasthttp.RequestCtx) {
 	}
 
 	var res = struct {
-		Banners []*model.Banner `json:"banners"`
-		Count   int             `json:"count"`
+		Banners []model.Banner `json:"banners"`
+		Count   int            `json:"count"`
 	}{
 		Banners: banners,
 		Count:   count,
@@ -232,7 +232,7 @@ func DeleteBanner(resp *response.Response, ctx *fasthttp.RequestCtx) {
 	}
 
 	ctx.SetStatusCode(fasthttp.StatusNoContent)
-	//TODO почему-то не пишется респонс пустой
+	//TODO почему-то не пишется, респонс пустой
 }
 
 func DeleteBanners(resp *response.Response, ctx *fasthttp.RequestCtx) {
@@ -248,10 +248,13 @@ func DeleteBanners(resp *response.Response, ctx *fasthttp.RequestCtx) {
 		return
 	}
 
-	err = service.DeleteBanners(input)
+	deletedBannerIds, err := service.DeleteBanners(input)
 	if err != nil {
-		resp.SetError(errs.GetErr(112))
-		ctx.SetStatusCode(fasthttp.StatusNotFound)
+		resp.SetError(errs.GetErr(99, err.Error()))
+		ctx.SetStatusCode(fasthttp.StatusInternalServerError)
 		return
 	}
+
+	ctx.SetStatusCode(fasthttp.StatusNoContent)
+	resp.SetValues(deletedBannerIds)
 }

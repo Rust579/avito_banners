@@ -3,47 +3,17 @@ package postgres
 import (
 	"avito_banners/internal/model"
 	"encoding/json"
+	"fmt"
 	"strconv"
 	"time"
 )
 
 func GetAllBanners() ([]model.Banner, error) {
 
-	var bannerData []byte
-	var tagIdsData []byte
-
 	query := "SELECT banner_id, feature_id, tag_ids, banner_data, is_active, created_at, updated_at FROM banners"
 
-	rows, err := psgDb.Query(query)
+	banners, err := getBannerData(query)
 	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	var banners []model.Banner
-
-	for rows.Next() {
-		var banner model.Banner
-
-		if err := rows.Scan(&banner.BannerId, &banner.FeatureId, &tagIdsData, &bannerData, &banner.IsActive, &banner.CreatedAt, &banner.UpdatedAt); err != nil {
-			return nil, err
-		}
-
-		banner.CreatedAt = banner.CreatedAt.UTC()
-		banner.UpdatedAt = banner.UpdatedAt.UTC()
-
-		if err := json.Unmarshal(bannerData, &banner.BannerItem); err != nil {
-			return nil, err
-		}
-
-		if err := json.Unmarshal(tagIdsData, &banner.TagIds); err != nil {
-			return nil, err
-		}
-
-		banners = append(banners, banner)
-	}
-
-	if err := rows.Err(); err != nil {
 		return nil, err
 	}
 
@@ -134,8 +104,8 @@ func SetNewBannerVersionByID(bannerID int, updatetAt time.Time) error {
 	return nil
 }
 
-func FindBannerByParams(tagID, featureID, offset, limit int) ([]*model.Banner, int, error) {
-	var banners []*model.Banner
+func FindBannersByParams(tagID, featureID, offset, limit int) ([]model.Banner, int, error) {
+
 	var count int
 
 	query := "SELECT b.* FROM (SELECT DISTINCT ON (created_at) * FROM banners WHERE"
@@ -157,6 +127,8 @@ func FindBannerByParams(tagID, featureID, offset, limit int) ([]*model.Banner, i
 		countQuery += " feature_id = " + strconv.Itoa(featureID)
 	}
 
+	countQuery += ") AS b"
+
 	// Добавляем сортировку по created_at и updated_at в обратном порядке
 	query += " ORDER BY created_at DESC, updated_at DESC) AS b"
 
@@ -168,40 +140,10 @@ func FindBannerByParams(tagID, featureID, offset, limit int) ([]*model.Banner, i
 		query += " OFFSET " + strconv.Itoa(offset)
 	}
 
-	rows, err := psgDb.Query(query)
+	banners, err := getBannerData(query)
 	if err != nil {
 		return nil, 0, err
 	}
-	defer rows.Close()
-
-	for rows.Next() {
-		var banner model.Banner
-		var bannerData []byte
-		var tagIdsData []byte
-
-		if err := rows.Scan(&banner.BannerId, &banner.FeatureId, &tagIdsData, &bannerData, &banner.IsActive, &banner.CreatedAt, &banner.UpdatedAt); err != nil {
-			return nil, 0, err
-		}
-
-		banner.CreatedAt = banner.CreatedAt.UTC()
-		banner.UpdatedAt = banner.UpdatedAt.UTC()
-
-		if err := json.Unmarshal(bannerData, &banner.BannerItem); err != nil {
-			return nil, 0, err
-		}
-
-		if err := json.Unmarshal(tagIdsData, &banner.TagIds); err != nil {
-			return nil, 0, err
-		}
-
-		banners = append(banners, &banner)
-	}
-
-	if err := rows.Err(); err != nil {
-		return nil, 0, err
-	}
-
-	countQuery += ") AS b"
 
 	// Выполняем запрос для подсчета количества строк
 	err = psgDb.QueryRow(countQuery).Scan(&count)
@@ -210,4 +152,68 @@ func FindBannerByParams(tagID, featureID, offset, limit int) ([]*model.Banner, i
 	}
 
 	return banners, count, nil
+}
+
+// Функция удаления баннера по одному tag_id и возврата всех banner_id удаленных строк
+func DeleteBannersByTagId(tagId int) ([]model.Banner, error) {
+
+	query := fmt.Sprintf("DELETE FROM banners WHERE %d = ANY (tag_ids) RETURNING banner_id", tagId)
+
+	banners, err := getBannerData(query)
+	if err != nil {
+		return nil, err
+	}
+
+	return banners, nil
+}
+
+func DeleteBannersByFeatureId(tagId int) ([]model.Banner, error) {
+
+	query := fmt.Sprintf("DELETE FROM banners WHERE %d = ANY (tag_ids) RETURNING banner_id", tagId)
+
+	banners, err := getBannerData(query)
+	if err != nil {
+		return nil, err
+	}
+
+	return banners, nil
+}
+
+func getBannerData(query string) ([]model.Banner, error) {
+	rows, err := psgDb.Query(query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var banners []model.Banner
+	var bannerData []byte
+	var tagIdsData []byte
+
+	for rows.Next() {
+		var banner model.Banner
+
+		if err := rows.Scan(&banner.BannerId, &banner.FeatureId, &tagIdsData, &bannerData, &banner.IsActive, &banner.CreatedAt, &banner.UpdatedAt); err != nil {
+			return nil, err
+		}
+
+		banner.CreatedAt = banner.CreatedAt.UTC()
+		banner.UpdatedAt = banner.UpdatedAt.UTC()
+
+		if err := json.Unmarshal(bannerData, &banner.BannerItem); err != nil {
+			return nil, err
+		}
+
+		if err := json.Unmarshal(tagIdsData, &banner.TagIds); err != nil {
+			return nil, err
+		}
+
+		banners = append(banners, banner)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return banners, nil
 }

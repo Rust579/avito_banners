@@ -3,6 +3,7 @@ package tests
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/valyala/fasthttp"
 )
 
@@ -18,7 +19,7 @@ type Response struct {
 	TmRequest string        `json:"tm_req"`
 }
 
-func SendHTTPRequest(uri string, method string, headers map[string]string, reqBody interface{}) (*Response, error) {
+func SendHTTPRequest(uri string, method string, headers map[string]string, statusCode int, reqBody interface{}) (*Response, error) {
 	client := &fasthttp.Client{}
 
 	req := fasthttp.AcquireRequest()
@@ -45,7 +46,8 @@ func SendHTTPRequest(uri string, method string, headers map[string]string, reqBo
 		return nil, err
 	}
 
-	if resp.StatusCode() != fasthttp.StatusOK {
+	if resp.StatusCode() != statusCode {
+		fmt.Println(string(resp.Body()))
 		return nil, errors.New("неправильный статус-код")
 	}
 

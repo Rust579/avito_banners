@@ -59,6 +59,7 @@ func ServerHandler(ctx *fasthttp.RequestCtx) {
 	case "/set-banner-version":
 		SetBannerVersion(resp, ctx)
 	case "/delete-banners":
+		// TODO не работает
 		DeleteBanners(resp, ctx)
 
 	default:

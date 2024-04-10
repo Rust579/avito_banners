@@ -195,9 +195,9 @@ func SetBannerVersion(input model.BannerIdRequest, resp *response.Response) erro
 	return nil
 }
 
-func GetBanners(input model.BannersGetRequest) ([]*model.Banner, int, error) {
+func GetBanners(input model.BannersGetRequest) ([]model.Banner, int, error) {
 
-	banners, count, err := postgres.FindBannerByParams(input.TagId, input.FeatureId, input.Offset, input.Limit)
+	banners, count, err := postgres.FindBannersByParams(input.TagId, input.FeatureId, input.Offset, input.Limit)
 	if err != nil {
 		return nil, count, err
 	}
@@ -220,19 +220,39 @@ func DeleteBanner(input model.BannerIdRequest) error {
 	return nil
 }
 
-func DeleteBanners(input model.BannersDeleteRequest) error {
+func DeleteBanners(input model.BannersDeleteRequest) ([]int, error) {
 
-	/*if err := postgres.DeleteBannerByID(input.BannerId); err != nil {
-		return err
+	var deletedBanners []model.Banner
+	var deletedBannerIds []int
+	var err error
+
+	if input.TagId != 0 {
+		deletedBanners, err = postgres.DeleteBannersByTagId(input.TagId)
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	banner := pulls.GetBannerById(input.BannerId)
-	if banner == nil {
-		return errors.New("banner not found")
+	if input.FeatureId != 0 {
+		deletedBanners, err = postgres.DeleteBannersByFeatureId(input.FeatureId)
+		if err != nil {
+			return nil, err
+		}
 	}
-	pulls.DeleteBannerById(*banner)*/
 
-	return nil
+	if len(deletedBanners) == 0 {
+		return nil, errors.New("banners not found")
+	}
+
+	for _, b := range deletedBanners {
+		pulls.DeleteBannerById(b)
+	}
+
+	for _, b := range deletedBanners {
+		deletedBannerIds = append(deletedBannerIds, b.BannerId)
+	}
+
+	return deletedBannerIds, nil
 }
 
 func checkExistsBanner(data model.Banner) (int, bool) {
