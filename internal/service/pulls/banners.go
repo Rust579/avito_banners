@@ -37,8 +37,6 @@ func InitBannersPulls(banners []model.Banner) {
 		bannerByFeatureIdPull.pull[b.FeatureId] = bs
 		bannerByFeatureIdPull.Unlock()
 	}
-
-	return
 }
 
 // AddPullBanner Добавление баннера
@@ -60,8 +58,6 @@ func AddPullBanner(banner model.Banner) {
 	bannerByFeatureIdPull.pull[banner.FeatureId] = b
 
 	bannerByFeatureIdPull.Unlock()
-
-	return
 }
 
 // UpdatePullBanner Обновления баннера
@@ -85,8 +81,6 @@ func UpdatePullBanner(updBanner model.Banner) {
 	}
 
 	bannerByFeatureIdPull.Unlock()
-
-	return
 }
 
 // GetBannersByFeatureId Получение баннеров по feature_id

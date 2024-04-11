@@ -7,7 +7,6 @@ import (
 	"avito_banners/internal/server"
 	"avito_banners/internal/service/pulls"
 	"encoding/json"
-	"fmt"
 	"log"
 	"os"
 	"os/signal"
@@ -57,7 +56,7 @@ func Run() {
 	srv := server.NewServer(config.Cfg.Service.Address)
 	go func() {
 		if err := srv.Run(handler.ServerHandler); err != nil {
-			log.Printf(fmt.Sprintf("error occured while running http server: %s", err.Error()))
+			log.Println("error occurred while running http server: ", err.Error())
 		}
 	}()
 	log.Printf("HTTP server started on addr  %s", config.Cfg.Service.Address)

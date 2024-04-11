@@ -27,9 +27,7 @@ func (r *Response) SetError(err errs.Error) *Response {
 }
 
 func (r *Response) SetErrors(ers []errs.Error) *Response {
-	for _, er := range ers {
-		r.Errors = append(r.Errors, er)
-	}
+	r.Errors = append(r.Errors, ers...)
 
 	return r
 }

@@ -49,9 +49,9 @@ func GetBanner(resp *response.Response, ctx *fasthttp.RequestCtx) {
 	var input model.BannerGetRequest
 	var err error
 
-	input.TagId, err = strconv.Atoi(string(ctx.QueryArgs().Peek("tag_id")))
-	input.FeatureId, err = strconv.Atoi(string(ctx.QueryArgs().Peek("feature_id")))
-	input.UseLastRevision, err = strconv.ParseBool(string(ctx.QueryArgs().Peek("use_last_revision")))
+	input.TagId, _ = strconv.Atoi(string(ctx.QueryArgs().Peek("tag_id")))
+	input.FeatureId, _ = strconv.Atoi(string(ctx.QueryArgs().Peek("feature_id")))
+	input.UseLastRevision, _ = strconv.ParseBool(string(ctx.QueryArgs().Peek("use_last_revision")))
 
 	if ers := input.Validate(); ers != nil {
 		resp.SetErrors(ers)
@@ -83,9 +83,9 @@ func GetBanner(resp *response.Response, ctx *fasthttp.RequestCtx) {
 func UpdateBanner(resp *response.Response, ctx *fasthttp.RequestCtx) {
 	var input model.BannerUpdateRequest
 
-	bannerId, err := strconv.Atoi(string(ctx.QueryArgs().Peek("id")))
+	bannerId, _ := strconv.Atoi(string(ctx.QueryArgs().Peek("id")))
 
-	if err = json.Unmarshal(ctx.PostBody(), &input); err != nil {
+	if err := json.Unmarshal(ctx.PostBody(), &input); err != nil {
 		log.Println("update banner error: " + err.Error())
 		resp.SetError(errs.GetErr(100))
 		ctx.SetStatusCode(fasthttp.StatusBadRequest)
@@ -204,9 +204,8 @@ func GetBanners(resp *response.Response, ctx *fasthttp.RequestCtx) {
 
 func DeleteBanner(resp *response.Response, ctx *fasthttp.RequestCtx) {
 	var input model.BannerIdRequest
-	var err error
 
-	input.BannerId, err = strconv.Atoi(string(ctx.QueryArgs().Peek("id")))
+	input.BannerId, _ = strconv.Atoi(string(ctx.QueryArgs().Peek("id")))
 
 	if ers := input.Validate(); ers != nil {
 		resp.SetErrors(ers)
@@ -214,7 +213,7 @@ func DeleteBanner(resp *response.Response, ctx *fasthttp.RequestCtx) {
 		return
 	}
 
-	err = service.DeleteBanner(input)
+	err := service.DeleteBanner(input)
 	if err != nil {
 		resp.SetError(errs.GetErr(99, err.Error()))
 		ctx.SetStatusCode(fasthttp.StatusNotFound)
@@ -228,8 +227,8 @@ func DeleteBanners(resp *response.Response, ctx *fasthttp.RequestCtx) {
 	var input model.BannersDeleteRequest
 	var err error
 
-	input.TagId, err = strconv.Atoi(string(ctx.QueryArgs().Peek("tag_id")))
-	input.FeatureId, err = strconv.Atoi(string(ctx.QueryArgs().Peek("feature_id")))
+	input.TagId, _ = strconv.Atoi(string(ctx.QueryArgs().Peek("tag_id")))
+	input.FeatureId, _ = strconv.Atoi(string(ctx.QueryArgs().Peek("feature_id")))
 
 	if ers := input.Validate(); ers != nil {
 		resp.SetErrors(ers)
