@@ -9,7 +9,8 @@ import (
 	"time"
 )
 
-func TestGetUserBanner(t *testing.T) {
+// Тест эндпоинта get-banner
+func TestGetBanner(t *testing.T) {
 
 	var (
 		tagId           = "7"
@@ -30,6 +31,9 @@ func TestGetUserBanner(t *testing.T) {
 	fmt.Println(resp)
 }
 
+// Функция для генерации любого количества баннеров через эндпоинт create-banner
+// Создание выполняется параллельно, но с задержкой в 20 миллисекунд для избежания одинаковых created_at
+// Пробовал генерировать больше 10000 баннеров и по ним тестировал все эндпоинты
 func TestCreateBanners(t *testing.T) {
 
 	uri := "/create-banner"

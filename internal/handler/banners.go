@@ -53,13 +53,6 @@ func GetBanner(resp *response.Response, ctx *fasthttp.RequestCtx) {
 	input.FeatureId, err = strconv.Atoi(string(ctx.QueryArgs().Peek("feature_id")))
 	input.UseLastRevision, err = strconv.ParseBool(string(ctx.QueryArgs().Peek("use_last_revision")))
 
-	if err != nil {
-		log.Println("get banner error: " + err.Error())
-		resp.SetError(errs.GetErr(100))
-		ctx.SetStatusCode(fasthttp.StatusBadRequest)
-		return
-	}
-
 	if ers := input.Validate(); ers != nil {
 		resp.SetErrors(ers)
 		ctx.SetStatusCode(fasthttp.StatusBadRequest)
@@ -75,6 +68,7 @@ func GetBanner(resp *response.Response, ctx *fasthttp.RequestCtx) {
 
 	token := string(ctx.Request.Header.Peek("Authorization"))
 
+	// Если баннер выключен, то выдавать только админу
 	if !banner.IsActive && token != config.Cfg.Tokens.Admin {
 		resp.SetError(errs.GetErr(112))
 		ctx.SetStatusCode(fasthttp.StatusNotFound)
@@ -134,7 +128,7 @@ func GetBannerVersions(resp *response.Response, ctx *fasthttp.RequestCtx) {
 	banners := service.GetBannerVersions(input)
 	if len(banners) == 0 {
 		resp.SetError(errs.GetErr(112))
-		ctx.SetStatusCode(fasthttp.StatusInternalServerError)
+		ctx.SetStatusCode(fasthttp.StatusNotFound)
 		return
 	}
 
@@ -192,7 +186,8 @@ func GetBanners(resp *response.Response, ctx *fasthttp.RequestCtx) {
 
 	if len(banners) == 0 {
 		resp.SetError(errs.GetErr(115))
-		ctx.SetStatusCode(fasthttp.StatusInternalServerError)
+		ctx.SetStatusCode(fasthttp.StatusNotFound)
+		return
 	}
 
 	var res = struct {
@@ -212,11 +207,6 @@ func DeleteBanner(resp *response.Response, ctx *fasthttp.RequestCtx) {
 	var err error
 
 	input.BannerId, err = strconv.Atoi(string(ctx.QueryArgs().Peek("id")))
-	if err != nil {
-		resp.SetError(errs.GetErr(100))
-		ctx.SetStatusCode(fasthttp.StatusBadRequest)
-		return
-	}
 
 	if ers := input.Validate(); ers != nil {
 		resp.SetErrors(ers)
@@ -232,7 +222,6 @@ func DeleteBanner(resp *response.Response, ctx *fasthttp.RequestCtx) {
 	}
 
 	ctx.SetStatusCode(fasthttp.StatusNoContent)
-	//TODO почему-то не пишется, респонс пустой
 }
 
 func DeleteBanners(resp *response.Response, ctx *fasthttp.RequestCtx) {
@@ -248,13 +237,21 @@ func DeleteBanners(resp *response.Response, ctx *fasthttp.RequestCtx) {
 		return
 	}
 
-	deletedBannerIds, err := service.DeleteBanners(input)
+	// TODO Можно запустить удаление в горутине, но тогда в респонс ничего не запишу
+	// TODO И пока время выполнения запроса < 50 мс
+	deletedBannerIds, err := service.DeleteBanners(input, resp)
 	if err != nil {
-		resp.SetError(errs.GetErr(99, err.Error()))
 		ctx.SetStatusCode(fasthttp.StatusInternalServerError)
 		return
 	}
 
-	ctx.SetStatusCode(fasthttp.StatusNoContent)
-	resp.SetValues(deletedBannerIds)
+	var res = struct {
+		DeletedBannerIds []int `json:"deleted_banner_ids"`
+		Count            int   `json:"count"`
+	}{
+		DeletedBannerIds: deletedBannerIds,
+		Count:            len(deletedBannerIds),
+	}
+
+	resp.SetValue(res)
 }

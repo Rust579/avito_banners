@@ -27,6 +27,7 @@ func Run() {
 
 	var err error
 
+	// Несколько попыток подключения к базе с задержкой в 5 секунд, на случай если база поднимется позже сервиса
 	for i := 0; i <= 3; i++ {
 		if err = postgres.Init(); err != nil {
 			log.Println("postgres init error", err.Error())
@@ -42,15 +43,17 @@ func Run() {
 		return
 	}
 
-	//TODO почистить память
+	// Достаем все баннеры с базы
 	banners, err := postgres.GetAllBanners()
 	if err != nil {
 		log.Println("error get all banners from postgres", err.Error())
 		return
 	}
 
+	// и собираем кэш со всеми баннерами
 	pulls.InitBannersPulls(banners)
 
+	// run http сервера
 	srv := server.NewServer(config.Cfg.Service.Address)
 	go func() {
 		if err := srv.Run(handler.ServerHandler); err != nil {

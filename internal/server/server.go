@@ -22,7 +22,7 @@ func (s *Server) Run(handler fasthttp.RequestHandler) error {
 		Handler:          handler,
 		ReadTimeout:      10 * time.Second,
 		WriteTimeout:     10 * time.Second,
-		DisableKeepalive: true, // set "connection: close" header in each response
+		DisableKeepalive: true,
 	}
 
 	return s.httpServer.ListenAndServe(s.addr)

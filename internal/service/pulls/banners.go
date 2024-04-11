@@ -6,7 +6,10 @@ import (
 	"sync"
 )
 
+// Кэш баннеров с ключами = banner_id
 var bannerByIdPull = &bannerIdPullMap{pull: make(map[int]model.Banner)}
+
+// Кэш баннеров с ключами = feature_id
 var bannerByFeatureIdPull = &bannerFIdPullMap{pull: make(map[int][]model.Banner)}
 
 type bannerIdPullMap struct {
@@ -19,6 +22,9 @@ type bannerFIdPullMap struct {
 	pull map[int][]model.Banner
 }
 
+// InitBannersPulls Сборка всего кэша
+// bannerByIdPull хранит по одному баннеру на ключ
+// bannerByFeatureIdPull может хранить по несколько баннеров на ключ
 func InitBannersPulls(banners []model.Banner) {
 	for _, b := range banners {
 		bannerByIdPull.Lock()
@@ -35,6 +41,7 @@ func InitBannersPulls(banners []model.Banner) {
 	return
 }
 
+// AddPullBanner Добавление баннера
 func AddPullBanner(banner model.Banner) {
 	bannerByIdPull.Lock()
 	_, ok := bannerByIdPull.pull[banner.BannerId]
@@ -57,6 +64,7 @@ func AddPullBanner(banner model.Banner) {
 	return
 }
 
+// UpdatePullBanner Обновления баннера
 func UpdatePullBanner(updBanner model.Banner) {
 	bannerByIdPull.Lock()
 	_, ok := bannerByIdPull.pull[updBanner.BannerId]
@@ -81,6 +89,7 @@ func UpdatePullBanner(updBanner model.Banner) {
 	return
 }
 
+// GetBannersByFeatureId Получение баннеров по feature_id
 func GetBannersByFeatureId(fId int) []model.Banner {
 	bannerByFeatureIdPull.Lock()
 	defer bannerByFeatureIdPull.Unlock()
@@ -93,6 +102,7 @@ func GetBannersByFeatureId(fId int) []model.Banner {
 	return banners
 }
 
+// GetBannerById Получение баннера по banner_id
 func GetBannerById(id int) *model.Banner {
 	bannerByIdPull.Lock()
 	defer bannerByIdPull.Unlock()
@@ -105,6 +115,7 @@ func GetBannerById(id int) *model.Banner {
 	return &banner
 }
 
+// DeleteBannerById Удаление баннера по banner_id
 func DeleteBannerById(bannerData model.Banner) {
 	bannerByIdPull.Lock()
 	_, ok := bannerByIdPull.pull[bannerData.BannerId]

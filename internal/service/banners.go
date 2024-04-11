@@ -23,6 +23,7 @@ func CreateBanner(bannerData model.BannerAddRequest, resp *response.Response) in
 		UpdatedAt:  time.Now().UTC(),
 	}
 
+	// Если такой баннер уже существует - ошибка
 	bId, ok := checkExistsBanner(banner)
 	if ok {
 		resp.SetError(errs.GetErr(111))
@@ -47,8 +48,8 @@ func GetBanner(bannerData model.BannerGetRequest) (*model.Banner, error) {
 	var banners []model.Banner
 	var bannersByVer []model.Banner
 
+	// Если нужна актуальная информация по баннеру - идем сразу в базу
 	if bannerData.UseLastRevision {
-
 		banner, err := postgres.FindBannerByFeatureAndTagId(bannerData)
 		if err != nil {
 			return nil, err
@@ -57,7 +58,7 @@ func GetBanner(bannerData model.BannerGetRequest) (*model.Banner, error) {
 		return banner, nil
 
 	} else {
-
+		// Иначе достаем баннер из кэша
 		banners = pulls.GetBannersByFeatureId(bannerData.FeatureId)
 
 		for _, b := range banners {
@@ -73,6 +74,7 @@ func GetBanner(bannerData model.BannerGetRequest) (*model.Banner, error) {
 		var newestBanner model.Banner
 		newestTime := time.Time{}
 
+		// Выбираем последнюю версию
 		for _, b := range bannersByVer {
 			if b.UpdatedAt.After(newestTime) {
 				newestBanner = b
@@ -105,18 +107,22 @@ func UpdateBanner(bannerData model.BannerUpdateRequest, resp *response.Response)
 		return false
 	}
 
+	// Далее определяем из какой версии баннера создать новую и какую версию можно удалить:
 	var newestBanner model.Banner
 	newestTime := time.Time{}
 	oldestTime := bannersByVer[0].UpdatedAt
 	oldestBanner := bannersByVer[0]
 
+	// Если версий несколько:
 	if len(bannersByVer) > 1 {
+		// Определяем последнюю версию
 		for _, b := range bannersByVer {
 			if b.UpdatedAt.Sub(newestTime) > 0 {
 				newestBanner = b
 				newestTime = b.UpdatedAt
 			}
 		}
+		// Определяем самую старую версию
 		for _, b := range bannersByVer {
 			if b.UpdatedAt.Sub(oldestTime) < 0 {
 				oldestBanner = b
@@ -124,6 +130,7 @@ func UpdateBanner(bannerData model.BannerUpdateRequest, resp *response.Response)
 			}
 		}
 
+		// Если версия одна, просто создаем по ней новую версию
 	} else if len(bannersByVer) == 1 {
 		newestBanner = bannersByVer[0]
 	}
@@ -132,6 +139,7 @@ func UpdateBanner(bannerData model.BannerUpdateRequest, resp *response.Response)
 	newestBanner.IsActive = bannerData.IsActive
 	newestBanner.UpdatedAt = time.Now().UTC()
 
+	// Добавляем новую версию
 	id, err := postgres.InsertBanner(newestBanner)
 	if err != nil {
 		resp.SetError(errs.GetErr(99, err.Error()))
@@ -141,6 +149,7 @@ func UpdateBanner(bannerData model.BannerUpdateRequest, resp *response.Response)
 	newestBanner.BannerId = id
 	pulls.AddPullBanner(newestBanner)
 
+	// Если версий 3 или более - удаляем самую старую версию, чтобы версий было всегда не более 3
 	if len(bannersByVer) >= 3 {
 
 		if err = postgres.DeleteBannerByID(oldestBanner.BannerId); err != nil {
@@ -154,6 +163,7 @@ func UpdateBanner(bannerData model.BannerUpdateRequest, resp *response.Response)
 	return true
 }
 
+// GetBannerVersions Возвращает все версии баннера
 func GetBannerVersions(bannerData model.BannerVersionsRequest) []model.Banner {
 
 	var bannersByVer []model.Banner
@@ -176,6 +186,7 @@ func GetBannerVersions(bannerData model.BannerVersionsRequest) []model.Banner {
 	return bannersByVer
 }
 
+// SetBannerVersion Выбор какой-либо версии баннера как основной
 func SetBannerVersion(input model.BannerIdRequest, resp *response.Response) error {
 
 	banner := pulls.GetBannerById(input.BannerId)
@@ -220,7 +231,7 @@ func DeleteBanner(input model.BannerIdRequest) error {
 	return nil
 }
 
-func DeleteBanners(input model.BannersDeleteRequest) ([]int, error) {
+func DeleteBanners(input model.BannersDeleteRequest, resp *response.Response) ([]int, error) {
 
 	var deletedBanners []model.Banner
 	var deletedBannerIds []int
@@ -229,6 +240,7 @@ func DeleteBanners(input model.BannersDeleteRequest) ([]int, error) {
 	if input.TagId != 0 {
 		deletedBanners, err = postgres.DeleteBannersByTagId(input.TagId)
 		if err != nil {
+			resp.SetError(errs.GetErr(99, err.Error()))
 			return nil, err
 		}
 	}
@@ -236,11 +248,13 @@ func DeleteBanners(input model.BannersDeleteRequest) ([]int, error) {
 	if input.FeatureId != 0 {
 		deletedBanners, err = postgres.DeleteBannersByFeatureId(input.FeatureId)
 		if err != nil {
+			resp.SetError(errs.GetErr(99, err.Error()))
 			return nil, err
 		}
 	}
 
 	if len(deletedBanners) == 0 {
+		resp.SetError(errs.GetErr(115))
 		return nil, errors.New("banners not found")
 	}
 

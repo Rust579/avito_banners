@@ -73,6 +73,10 @@ func (b *BannerAddRequest) Validate() (ers []errs.Error) {
 		}
 	}
 
+	if b.BannerItem == nil {
+		ers = append(ers, errs.GetErr(101))
+	}
+
 	return
 }
 
@@ -107,6 +111,10 @@ func (b *BannerUpdateRequest) Validate() (ers []errs.Error) {
 		if t <= 0 {
 			ers = append(ers, errs.GetErr(107))
 		}
+	}
+
+	if b.BannerItem == nil {
+		ers = append(ers, errs.GetErr(101))
 	}
 
 	return
@@ -153,6 +161,10 @@ func (b *BannersDeleteRequest) Validate() (ers []errs.Error) {
 
 	if b.TagId <= 0 && b.FeatureId <= 0 {
 		ers = append(ers, errs.GetErr(114))
+	}
+
+	if b.TagId > 0 && b.FeatureId > 0 {
+		ers = append(ers, errs.GetErr(102))
 	}
 
 	return

@@ -3,11 +3,11 @@ package postgres
 import (
 	"avito_banners/internal/model"
 	"encoding/json"
-	"fmt"
 	"strconv"
 	"time"
 )
 
+// GetAllBanners Получение всех баннеров
 func GetAllBanners() ([]model.Banner, error) {
 
 	query := "SELECT banner_id, feature_id, tag_ids, banner_data, is_active, created_at, updated_at FROM banners"
@@ -20,6 +20,7 @@ func GetAllBanners() ([]model.Banner, error) {
 	return banners, nil
 }
 
+// InsertBanner Добавление одного баннера
 func InsertBanner(banner model.Banner) (int, error) {
 
 	bannerItemJson, err := json.Marshal(banner.BannerItem)
@@ -44,6 +45,7 @@ func InsertBanner(banner model.Banner) (int, error) {
 	return bannerID, nil
 }
 
+// FindBannerByFeatureAndTagId получение баннера по feature_id и tag_id с последним updated_at
 func FindBannerByFeatureAndTagId(input model.BannerGetRequest) (*model.Banner, error) {
 
 	query := "SELECT * FROM banners " +
@@ -81,6 +83,7 @@ func FindBannerByFeatureAndTagId(input model.BannerGetRequest) (*model.Banner, e
 	return &banner, nil
 }
 
+// DeleteBannerByID удаление баннера по banner_id
 func DeleteBannerByID(bannerID int) error {
 	query := "DELETE FROM banners WHERE banner_id = $1"
 
@@ -92,6 +95,7 @@ func DeleteBannerByID(bannerID int) error {
 	return nil
 }
 
+// SetNewBannerVersionByID обновление updated_at для выбора версии баннера
 func SetNewBannerVersionByID(bannerID int, updatetAt time.Time) error {
 
 	query := "UPDATE banners SET updated_at = $1 WHERE banner_id = $2"
@@ -104,6 +108,9 @@ func SetNewBannerVersionByID(bannerID int, updatetAt time.Time) error {
 	return nil
 }
 
+// FindBannersByParams получение баннеров по tag_id, feature_id, offset и limit. Все поля опциональные, но tag_id или feature_id обязательное
+// Для одинаковых created_at выбираем самый новый баннер по updated_at (последняя версия баннера)
+// Также возвращается число всех найденных баннеров
 func FindBannersByParams(tagID, featureID, offset, limit int) ([]model.Banner, int, error) {
 
 	var count int
@@ -154,12 +161,20 @@ func FindBannersByParams(tagID, featureID, offset, limit int) ([]model.Banner, i
 	return banners, count, nil
 }
 
-// Функция удаления баннера по одному tag_id и возврата всех banner_id удаленных строк
+// DeleteBannersByTagId Удаление баннера по одному tag_id и возврат всех удаленных баннеров
 func DeleteBannersByTagId(tagId int) ([]model.Banner, error) {
+	// Запрос для получения данных о баннерах, которые будут удалены
+	selectQuery := "SELECT banner_id, feature_id, tag_ids, banner_data, is_active, created_at, updated_at FROM banners WHERE tag_ids @> '[" + strconv.Itoa(tagId) + "]'::jsonb"
 
-	query := fmt.Sprintf("DELETE FROM banners WHERE %d = ANY (tag_ids) RETURNING banner_id", tagId)
+	// Получение данных о баннерах
+	banners, err := getBannerData(selectQuery)
+	if err != nil {
+		return nil, err
+	}
 
-	banners, err := getBannerData(query)
+	// Запрос для удаления баннеров
+	deleteQuery := "DELETE FROM banners WHERE tag_ids @> '[" + strconv.Itoa(tagId) + "]'::jsonb"
+	_, err = psgDb.Exec(deleteQuery)
 	if err != nil {
 		return nil, err
 	}
@@ -167,11 +182,22 @@ func DeleteBannersByTagId(tagId int) ([]model.Banner, error) {
 	return banners, nil
 }
 
-func DeleteBannersByFeatureId(tagId int) ([]model.Banner, error) {
+// DeleteBannersByFeatureId Удаление баннера по feature_id и возврат всех удаленных баннеров
+func DeleteBannersByFeatureId(featureId int) ([]model.Banner, error) {
 
-	query := fmt.Sprintf("DELETE FROM banners WHERE %d = ANY (tag_ids) RETURNING banner_id", tagId)
+	// Запрос для получения данных о баннерах, которые будут удалены
+	selectQuery := "SELECT banner_id, feature_id, tag_ids, banner_data, is_active, created_at, updated_at FROM banners WHERE feature_id = " + strconv.Itoa(featureId)
 
-	banners, err := getBannerData(query)
+	// Получение данных о баннерах
+	banners, err := getBannerData(selectQuery)
+	if err != nil {
+		return nil, err
+	}
+
+	// Запрос для удаления баннеров
+	deleteQuery := "DELETE FROM banners WHERE feature_id = $1"
+
+	_, err = psgDb.Exec(deleteQuery, featureId)
 	if err != nil {
 		return nil, err
 	}
@@ -179,6 +205,7 @@ func DeleteBannersByFeatureId(tagId int) ([]model.Banner, error) {
 	return banners, nil
 }
 
+// Получение данных с базы
 func getBannerData(query string) ([]model.Banner, error) {
 	rows, err := psgDb.Query(query)
 	if err != nil {
@@ -197,9 +224,11 @@ func getBannerData(query string) ([]model.Banner, error) {
 			return nil, err
 		}
 
+		// Все даты-время переводим в универсальный формат
 		banner.CreatedAt = banner.CreatedAt.UTC()
 		banner.UpdatedAt = banner.UpdatedAt.UTC()
 
+		// Анмаршалим json-ки banner_item и tag_ids
 		if err := json.Unmarshal(bannerData, &banner.BannerItem); err != nil {
 			return nil, err
 		}

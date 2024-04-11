@@ -19,6 +19,7 @@ type Response struct {
 	TmRequest string        `json:"tm_req"`
 }
 
+// SendHTTPRequest http клиент для тестов
 func SendHTTPRequest(uri string, method string, headers map[string]string, statusCode int, reqBody interface{}) (*Response, error) {
 	client := &fasthttp.Client{}
 

@@ -30,8 +30,8 @@ func ServerHandler(ctx *fasthttp.RequestCtx) {
 		ctx.Write(resp.FormResponse().Json())
 		return
 	}
-
-	if string(ctx.Path()) == "/user_banner" {
+	// Получение баннера
+	if string(ctx.Path()) == "/get-banner" {
 		GetBanner(resp, ctx)
 		ctx.Write(resp.FormResponse().Json())
 		return
@@ -45,21 +45,27 @@ func ServerHandler(ctx *fasthttp.RequestCtx) {
 	}
 
 	switch string(ctx.Path()) {
+	// Создание баннера
 	case "/create-banner":
 		CreateBanner(resp, ctx)
-	case "/banner":
+		// Обновление содержимого баннера с сохранением предыдущих двух версий
+	case "/update-banner":
 		UpdateBanner(resp, ctx)
-	case "/banners":
+		// Получение баннеров по фиче или тегу
+	case "/get-banners":
 		GetBanners(resp, ctx)
-	case "/delete":
+		// Удаление баннера по banner_id
+	case "/delete-banner":
 		DeleteBanner(resp, ctx)
 
+		// Получение всех версий одного баннера
 	case "/banner-versions":
 		GetBannerVersions(resp, ctx)
+		// Выбор версии баннера
 	case "/set-banner-version":
 		SetBannerVersion(resp, ctx)
+		// Удаление баннеров по фиче или тегу
 	case "/delete-banners":
-		// TODO не работает
 		DeleteBanners(resp, ctx)
 
 	default:
