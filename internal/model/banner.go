@@ -6,7 +6,7 @@ import (
 )
 
 type Banner struct {
-	BannerId   int                    `json:"banner_id"`
+	BannerId   int                    `json:"id"`
 	TagIds     []int                  `json:"tag_ids"`
 	FeatureId  int                    `json:"feature_id"`
 	BannerItem map[string]interface{} `json:"banner_item"`
@@ -29,7 +29,7 @@ type BannerGetRequest struct {
 }
 
 type BannerUpdateRequest struct {
-	BannerId   int                    `json:"banner_id"`
+	BannerId   int                    `json:"id"`
 	TagIds     []int                  `json:"tag_ids"`
 	FeatureId  int                    `json:"feature_id"`
 	IsActive   bool                   `json:"is_active"`
@@ -42,7 +42,7 @@ type BannerVersionsRequest struct {
 }
 
 type BannerIdRequest struct {
-	BannerId int `json:"banner_id"`
+	BannerId int `json:"id"`
 }
 
 type BannersGetRequest struct {

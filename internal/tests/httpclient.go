@@ -54,9 +54,11 @@ func SendHTTPRequest(uri string, method string, headers map[string]string, statu
 
 	var response Response
 
-	err = json.Unmarshal(resp.Body(), &response)
-	if err != nil {
-		return nil, err
+	if resp.Body() != nil {
+		err = json.Unmarshal(resp.Body(), &response)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return &response, nil

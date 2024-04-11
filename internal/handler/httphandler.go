@@ -14,6 +14,7 @@ func ServerHandler(ctx *fasthttp.RequestCtx) {
 	ctx.Response.Header.Add(fasthttp.HeaderAccessControlAllowMethods, fasthttp.MethodPost)
 	ctx.Response.Header.Add(fasthttp.HeaderAccessControlAllowMethods, fasthttp.MethodGet)
 	ctx.Response.Header.Add(fasthttp.HeaderAccessControlAllowMethods, fasthttp.MethodPatch)
+	ctx.Response.Header.Add(fasthttp.HeaderAccessControlAllowMethods, fasthttp.MethodDelete)
 	ctx.Response.Header.Add(fasthttp.HeaderAccessControlAllowHeaders, fasthttp.HeaderContentType)
 	ctx.Response.Header.Add(fasthttp.HeaderAccessControlAllowHeaders, fasthttp.HeaderAuthorization)
 	ctx.Response.Header.Set("Content-Type", "application/json")
@@ -59,7 +60,7 @@ func ServerHandler(ctx *fasthttp.RequestCtx) {
 		DeleteBanner(resp, ctx)
 
 		// Получение всех версий одного баннера
-	case "/banner-versions":
+	case "/get-banner-versions":
 		GetBannerVersions(resp, ctx)
 		// Выбор версии баннера
 	case "/set-banner-version":
