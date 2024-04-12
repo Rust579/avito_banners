@@ -1,10 +1,7 @@
 package server
 
 import (
-	"github.com/gorilla/mux"
-	httpSwagger "github.com/swaggo/http-swagger"
 	"github.com/valyala/fasthttp"
-	"net/http"
 	"time"
 )
 
@@ -30,11 +27,4 @@ func (s *Server) Run(handler fasthttp.RequestHandler) error {
 
 func (s *Server) Shutdown() error {
 	return s.httpServer.Shutdown()
-}
-
-// TODO swaggo
-func ServDocs(host, port string) error {
-	router := mux.NewRouter()
-	router.PathPrefix("/docs").Handler(httpSwagger.WrapHandler)
-	return http.ListenAndServe(host+":"+port, router)
 }

@@ -95,9 +95,9 @@ func (b *BannerGetRequest) Validate() (ers []errs.Error) {
 
 func (b *BannerUpdateRequest) Validate() (ers []errs.Error) {
 
-	if b.BannerId <= 0 {
+	/*if b.BannerId <= 0 {
 		ers = append(ers, errs.GetErr(113))
-	}
+	}*/
 
 	if len(b.TagIds) == 0 {
 		ers = append(ers, errs.GetErr(105))

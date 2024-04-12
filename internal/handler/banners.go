@@ -236,8 +236,6 @@ func DeleteBanners(resp *response.Response, ctx *fasthttp.RequestCtx) {
 		return
 	}
 
-	// Можно запустить удаление в горутине, но тогда в респонс ничего не запишу
-	// И пока время выполнения запроса < 50 мс
 	deletedBannerIds, err := service.DeleteBanners(input, resp)
 	if err != nil {
 		ctx.SetStatusCode(fasthttp.StatusInternalServerError)
