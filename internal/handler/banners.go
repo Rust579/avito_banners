@@ -66,6 +66,12 @@ func GetBanner(resp *response.Response, ctx *fasthttp.RequestCtx) {
 		return
 	}
 
+	if banner.BannerItem == nil {
+		resp.SetError(errs.GetErr(112))
+		ctx.SetStatusCode(fasthttp.StatusNotFound)
+		return
+	}
+
 	token := string(ctx.Request.Header.Peek("Authorization"))
 
 	// Если баннер выключен, то выдавать только админу
